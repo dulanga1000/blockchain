@@ -1,19 +1,28 @@
 import { useEffect, useState } from "react";
+import Navbar from "./components/common/Navbar";
 import TransactionForm from "./components/blockchain/TransactionForm";
 import BlockchainList from "./components/blockchain/BlockchainList";
 import { addBlock, getChain, validateChain } from "./services/api";
 import type { Block } from "./types/block";
+import toast from "react-hot-toast";
 
 function App() {
   const [chain, setChain] = useState<Block[]>([]);
   const [valid, setValid] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
-    const res = await getChain();
-    setChain(res.data);
+    setLoading(true);
+    try {
+      const res = await getChain();
+      setChain(res.data);
 
-    const val = await validateChain();
-    setValid(val.data.valid);
+      const val = await validateChain();
+      setValid(val.data.valid);
+    } catch (err) {
+      toast.error("Failed to load blockchain");
+    }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -21,32 +30,34 @@ function App() {
   }, []);
 
   const handleAdd = async (data: string) => {
-    await addBlock(data);
-    await loadData();
+    try {
+      await addBlock(data);
+      toast.success("Block added!");
+      loadData();
+    } catch {
+      toast.error("Error adding block");
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
-      <h1 className="text-3xl font-bold text-center text-green-400 mb-6">
-        🔗 Blockchain App
-      </h1>
+    <div className="min-h-screen bg-gray-900 text-white">
+      <Navbar />
 
-      <div className="max-w-xl mx-auto">
+      <div className="max-w-4xl mx-auto p-6">
         <TransactionForm onAdd={handleAdd} />
 
         <div className="mt-6">
-          <h2 className="text-xl mb-2">Blockchain</h2>
-          <BlockchainList chain={chain} />
+          <BlockchainList chain={chain} loading={loading} />
         </div>
 
-        <div className="mt-4 text-center">
+        <div className="mt-6 text-center">
           {valid ? (
             <p className="text-green-400 font-bold">
-              Blockchain is VALID ✅
+              ✅ Blockchain is VALID
             </p>
           ) : (
             <p className="text-red-400 font-bold">
-              Blockchain is INVALID ❌
+              ❌ Blockchain is INVALID
             </p>
           )}
         </div>

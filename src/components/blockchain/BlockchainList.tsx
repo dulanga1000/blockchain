@@ -1,13 +1,19 @@
 import type { Block } from "../../types/block";
 import BlockCard from "./BlockCard";
 
-interface Props {
+function BlockchainList({
+  chain,
+  loading,
+}: {
   chain: Block[];
-}
+  loading: boolean;
+}) {
+  if (loading) {
+    return <p className="text-center">Loading blockchain...</p>;
+  }
 
-function BlockchainList({ chain }: Props) {
   return (
-    <div>
+    <div className="grid md:grid-cols-2 gap-4">
       {chain.map((block) => (
         <BlockCard key={block.index} block={block} />
       ))}
