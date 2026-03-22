@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API = "http://127.0.0.1:5000"; // change after deploy
+const API = "https://blockchain-backend-t85y.onrender.com"; // change after deploy
 
 export const getChain = () => axios.get(`${API}/chain`);
 
