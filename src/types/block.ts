@@ -1,6 +1,6 @@
 export interface Block {
-  index: number;
-  transactions: string[];
-  hash: string;
-  prev_hash: string;
+  index:number;
+  hash:string;
+  prev_hash:string;
+  tx:any[];
 }

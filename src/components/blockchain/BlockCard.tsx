@@ -11,7 +11,7 @@ function BlockCard({ block }: Props) {
 
       <p className="text-sm mt-2">
         <span className="text-gray-400">Transactions:</span>{" "}
-        {block.transactions.join(", ")}
+        {block.tx.join(", ")}
       </p>
 
       <p className="text-xs mt-2 break-all">
