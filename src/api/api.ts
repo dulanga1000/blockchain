@@ -1,4 +1,4 @@
-export const API = "https://blockchain-backend-t85y.onrender.com"; 
+export const API = "https://blockchain-backend-t85y.onrender.com";
 
 export interface WalletResponse {
   username: string;
@@ -11,6 +11,11 @@ export interface Transaction {
   sender: string;
   receiver: string;
   amount: number;
+}
+
+export interface TransactionHistory extends Transaction {
+  status: string;
+  block_index?: number;
 }
 
 export interface ChainBlock {
@@ -27,7 +32,6 @@ export interface ChainResponse {
   length: number;
 }
 
-
 export const createWallet = async (username: string, password: string): Promise<WalletResponse> => {
   const response = await fetch(`${API}/create_wallet`, {
     method: "POST",
@@ -38,7 +42,6 @@ export const createWallet = async (username: string, password: string): Promise<
   if (!response.ok) throw new Error(data.error);
   return data;
 };
-
 
 export const loginUser = async (username: string, password: string): Promise<WalletResponse> => {
   const response = await fetch(`${API}/login`, {
@@ -69,4 +72,8 @@ export const validateChain = async (): Promise<{message: string, valid: boolean}
 
 export const checkBalance = async (address: string): Promise<{address: string, balance: number}> => {
   return fetch(`${API}/balance/${address}`).then(res => res.json());
+};
+
+export const getTransactionHistory = async (address: string): Promise<TransactionHistory[]> => {
+  return fetch(`${API}/history/${address}`).then(res => res.json());
 };
