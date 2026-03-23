@@ -2,6 +2,7 @@ export const API = "https://blockchain-backend-t85y.onrender.com"; // Change to 
 
 // ✅ TypeScript Interfaces
 export interface WalletResponse {
+  username: string;
   public_key: string;
   private_key: string;
 }
@@ -27,8 +28,20 @@ export interface ChainResponse {
 }
 
 // ✅ API Calls
-export const createWallet = async (): Promise<WalletResponse> => {
-  return fetch(`${API}/create_wallet`).then(res => res.json());
+export const createWallet = async (username: string): Promise<WalletResponse> => {
+  const response = await fetch(`${API}/create_wallet`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username }),
+  });
+  
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error);
+  return data;
+};
+
+export const getWallets = async (): Promise<WalletResponse[]> => {
+  return fetch(`${API}/wallets`).then(res => res.json());
 };
 
 export const mineBlock = async (): Promise<ChainBlock> => {
