@@ -1,4 +1,5 @@
-const API = "https://blockchain-backend-t85y.onrender.com";
+// Export this so other components can share the base URL
+export const API = "https://blockchain-backend-t85y.onrender.com"; 
 
 export const createWallet = async () => {
   return fetch(`${API}/create_wallet`).then(res => res.json());
