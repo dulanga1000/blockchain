@@ -1,4 +1,4 @@
-export const API = "https://blockchain-backend-t85y.onrender.com"; // Change if testing locally
+export const API = "https://blockchain-backend-t85y.onrender.com"; 
 
 export interface WalletResponse {
   username: string;
@@ -27,7 +27,7 @@ export interface ChainResponse {
   length: number;
 }
 
-// ✅ NEW: Added password parameter
+
 export const createWallet = async (username: string, password: string): Promise<WalletResponse> => {
   const response = await fetch(`${API}/create_wallet`, {
     method: "POST",
@@ -39,7 +39,7 @@ export const createWallet = async (username: string, password: string): Promise<
   return data;
 };
 
-// ✅ NEW: Added password parameter
+
 export const loginUser = async (username: string, password: string): Promise<WalletResponse> => {
   const response = await fetch(`${API}/login`, {
     method: "POST",
