@@ -1,29 +1,36 @@
 import { useState, useEffect } from "react";
 import { API, getWallets, type WalletResponse } from "../api/api"; 
+import { Link } from "react-router-dom";
 
 export default function TransactionForm() {
   const [wallets, setWallets] = useState<WalletResponse[]>([]);
+  const [authUser, setAuthUser] = useState<WalletResponse | null>(null);
   
-  // Store the typed usernames
-  const [senderUsername, setSenderUsername] = useState("");
   const [receiverUsername, setReceiverUsername] = useState("");
-  
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     getWallets().then(setWallets).catch(console.error);
+    const stored = localStorage.getItem("authUser");
+    if (stored) setAuthUser(JSON.parse(stored));
   }, []);
 
-  // Find the full wallet objects based on what is typed in the search box
-  const senderWallet = wallets.find(w => w.username === senderUsername);
+  if (!authUser) {
+    return (
+      <div className="max-w-xl mx-auto mt-20 bg-white shadow-xl p-10 rounded-3xl text-center border border-slate-200">
+        <h2 className="text-2xl font-bold text-slate-800 mb-4">Authentication Required</h2>
+        <p className="text-slate-500 mb-6">You must unlock your wallet locally to sign transactions.</p>
+        <Link to="/wallet" className="bg-blue-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg">Go to Login</Link>
+      </div>
+    );
+  }
+
   const receiverWallet = wallets.find(w => w.username === receiverUsername);
 
   const submitTransaction = async () => {
-    if (!senderWallet || !receiverWallet) {
-      alert("Please ensure both Sender and Receiver are valid network users.");
-      return;
-    }
+    if (!receiverWallet) return alert("Select a valid receiver.");
+    if (receiverWallet.username === authUser.username) return alert("You cannot send money to yourself.");
 
     setLoading(true);
     try {
@@ -31,100 +38,67 @@ export default function TransactionForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sender: senderWallet.public_key,
+          sender: authUser.public_key,
           receiver: receiverWallet.public_key,
           amount: Number(amount),
-          private_key: senderWallet.private_key, 
+          private_key: authUser.private_key, // Passed automatically from local auth!
         }),
       });
 
       const data = await response.json();
       
       if (response.ok) {
-        alert("✅ Transaction signed and added to the Mempool!");
-        setAmount("");
-        // Refresh wallets to show new (pending) balances
-        getWallets().then(setWallets).catch(console.error);
-      } else {
-        alert("❌ Error: " + data.error);
-      }
+        alert("✅ Transaction signed using your Private Key and added to Mempool!");
+        setAmount(""); setReceiverUsername("");
+        // Update local auth balance for immediate visual feedback
+        const updatedAuth = {...authUser, balance: authUser.balance - Number(amount)};
+        localStorage.setItem("authUser", JSON.stringify(updatedAuth));
+        setAuthUser(updatedAuth);
+      } else alert("❌ Error: " + data.error);
     } catch (error) {
-      alert("Network error occurred connecting to node.");
+      alert("Network error.");
     }
     setLoading(false);
   };
 
-  const inputClass = "w-full bg-white border-2 border-slate-200 text-slate-900 placeholder-slate-400 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-3 font-semibold shadow-sm transition-all";
+  const inputClass = "w-full bg-white border-2 border-slate-200 text-slate-900 text-sm rounded-lg focus:border-blue-500 block p-3 font-semibold transition-all";
 
   return (
-    <div className="max-w-xl mx-auto mt-10 bg-white shadow-2xl shadow-slate-200/50 p-8 rounded-3xl border border-slate-100">
-      <div className="mb-8 border-b border-slate-100 pb-4">
-        <h2 className="text-2xl font-extrabold text-slate-800">Initiate Transfer</h2>
-        <p className="text-slate-500 text-sm mt-1">Search for users to create a signed transaction.</p>
+    <div className="max-w-xl mx-auto mt-10 bg-white shadow-2xl p-8 rounded-3xl border border-slate-100">
+      <div className="mb-6 border-b border-slate-100 pb-4">
+        <h2 className="text-2xl font-extrabold text-slate-800">Transfer Funds</h2>
       </div>
 
-      {/* Hidden Data List for the search feature */}
+      <div className="bg-slate-900 p-4 rounded-xl mb-6 flex justify-between items-center text-white">
+        <div>
+          <p className="text-xs text-slate-400 uppercase font-bold tracking-widest">Sender</p>
+          <p className="font-bold">{authUser.username}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs text-slate-400 uppercase font-bold tracking-widest">Available Balance</p>
+          <p className="text-emerald-400 font-bold">{authUser.balance.toLocaleString()} Coins</p>
+        </div>
+      </div>
+
       <datalist id="user-list">
-        {wallets.map(w => (
-          <option key={w.username} value={w.username} />
-        ))}
+        {wallets.filter(w => w.username !== authUser.username).map(w => <option key={w.username} value={w.username} />)}
       </datalist>
 
       <div className="space-y-6">
-        {/* SENDER SEARCH */}
-        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-          <label className="block mb-2 text-xs font-bold text-slate-500 uppercase tracking-wide">Sender (Search or Select)</label>
-          <input 
-            list="user-list"
-            placeholder="Type sender username..."
-            value={senderUsername}
-            onChange={(e) => setSenderUsername(e.target.value)}
-            className={inputClass}
-          />
-          {senderWallet ? (
-            <div className="mt-2 text-sm text-emerald-600 font-bold">
-              Current Balance: {senderWallet.balance.toLocaleString()} Coins
-            </div>
-          ) : senderUsername && (
-            <div className="mt-2 text-sm text-red-500">User not found</div>
-          )}
-        </div>
-
-        {/* RECEIVER SEARCH */}
-        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-          <label className="block mb-2 text-xs font-bold text-slate-500 uppercase tracking-wide">Receiver (Search or Select)</label>
-          <input 
-            list="user-list"
-            placeholder="Type receiver username..."
-            value={receiverUsername}
-            onChange={(e) => setReceiverUsername(e.target.value)}
-            className={inputClass}
-          />
-          {receiverWallet && (
-            <div className="mt-2 text-xs text-slate-500 font-mono truncate">
-              Key: {receiverWallet.public_key}
-            </div>
-          )}
-        </div>
-
-        {/* AMOUNT */}
         <div>
-          <label className="block mb-2 text-xs font-bold text-slate-500 uppercase tracking-wide">Amount to Transfer</label>
-          <input 
-            placeholder="0.00" 
-            type="number" 
-            value={amount} 
-            className={inputClass} 
-            onChange={(e) => setAmount(e.target.value)} 
-          />
+          <label className="block mb-2 text-xs font-bold text-slate-500 uppercase tracking-wide">Receiver (Search User)</label>
+          <input list="user-list" placeholder="Type username..." value={receiverUsername} onChange={(e) => setReceiverUsername(e.target.value)} className={inputClass} />
+          {receiverWallet && <div className="mt-2 text-xs text-slate-400 font-mono truncate">Key: {receiverWallet.public_key}</div>}
         </div>
-        
-        <button
-          onClick={submitTransaction}
-          disabled={loading || !senderWallet || !receiverWallet || !amount}
-          className="w-full mt-6 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-xl shadow-lg shadow-blue-500/30 transition-all text-lg"
-        >
-          {loading ? "Processing..." : "Sign & Broadcast Transaction"}
+
+        <div>
+          <label className="block mb-2 text-xs font-bold text-slate-500 uppercase tracking-wide">Amount</label>
+          <input placeholder="0.00" type="number" value={amount} className={inputClass} onChange={(e) => setAmount(e.target.value)} />
+        </div>
+
+        <button onClick={submitTransaction} disabled={loading || !receiverWallet || !amount || Number(amount) <= 0}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all text-lg disabled:opacity-50">
+          {loading ? "Signing with Private Key..." : "Sign & Broadcast"}
         </button>
       </div>
     </div>
