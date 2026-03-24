@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 export default function Home() {
   return (
     <section className="max-w-6xl mx-auto mt-4 md:mt-8 grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-[1.5fr_1fr] p-4 md:p-6">
-
       <div className="rounded-2xl md:rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-xl shadow-slate-200/40 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 md:w-64 md:h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 translate-x-1/2 -translate-y-1/2"></div>
         
@@ -16,7 +15,6 @@ export default function Home() {
           <span>🔑</span> Get Started: Create Identity
         </Link>
       </div>
-
 
       <div className="rounded-2xl md:rounded-3xl border border-slate-200 bg-slate-50 p-6 md:p-8 shadow-sm">
         <h2 className="text-lg md:text-xl font-bold text-slate-800 mb-4 md:mb-6 flex items-center gap-2">

@@ -53,7 +53,9 @@ export default function TransactionForm() {
         localStorage.setItem("authUser", JSON.stringify(updatedAuth));
         setAuthUser(updatedAuth);
       } else alert("❌ Error: " + data.error);
-    } catch (error) { alert("Network error."); }
+    } catch (error) { 
+      alert("Network error."); 
+    }
     setLoading(false);
   };
 

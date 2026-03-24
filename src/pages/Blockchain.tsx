@@ -14,13 +14,16 @@ export default function Blockchain() {
       setChain(chainData.chain);
       const walletData = await getWallets();
       setWallets(walletData);
-    } catch (error) { console.error("Failed to fetch data", error); }
+    } catch (error) { 
+      console.error("Failed to fetch data", error); 
+    }
   };
 
   useEffect(() => { fetchInitialData(); }, []);
 
   const getIdentity = (pubKey: string) => {
     if (pubKey === "SYSTEM") return { name: "SYSTEM (Airdrop)", color: "text-amber-600" };
+    if (pubKey === "NETWORK_GENESIS") return { name: "NETWORK GENESIS", color: "text-fuchsia-500" };
     const user = wallets.find(w => w.public_key === pubKey);
     return user ? { name: user.username, color: "text-blue-600" } : { name: "Unknown Address", color: "text-slate-500" };
   };
@@ -30,7 +33,9 @@ export default function Blockchain() {
       const result = await validateChain();
       setValidationStatus(result);
       setTimeout(() => setValidationStatus(null), 5000); 
-    } catch (error) { alert("Error connecting to node."); }
+    } catch (error) { 
+      alert("Error connecting to node."); 
+    }
   };
 
   const handleMine = async () => {
@@ -39,14 +44,14 @@ export default function Blockchain() {
       await mineBlock();
       await fetchInitialData(); 
       alert("✅ Block successfully mined and added to the ledger!");
-    } catch (error) { alert("❌ Error mining block."); }
+    } catch (error) { 
+      alert("❌ Error mining block."); 
+    }
     setLoading(false);
   };
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-6 animate-fade-in">
-      
-
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 bg-slate-900 p-5 md:p-6 rounded-2xl md:rounded-3xl shadow-lg text-white gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-extrabold flex items-center gap-3"><span>⛓️</span> Live Network Ledger</h1>
@@ -68,11 +73,9 @@ export default function Blockchain() {
         </div>
       )}
       
-
       <div className="flex flex-col items-center">
         {chain.map((block: ChainBlock, index: number) => (
           <div key={block.index} className="w-full flex flex-col items-center">
-            
             <div className="w-full bg-white shadow-xl rounded-2xl overflow-hidden border-2 border-slate-200">
               <div className="bg-slate-100 p-3 md:p-4 border-b-2 border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <span className="bg-slate-800 text-white text-xs md:text-sm font-bold px-3 py-1.5 rounded-full shadow-sm">
@@ -110,24 +113,21 @@ export default function Blockchain() {
                       const receiver = getIdentity(tx.receiver);
                       return (
                         <div key={i} className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-4">
-                          
                           <div className="flex-1 min-w-0 text-center md:text-left bg-white p-3 md:p-0 rounded-lg md:bg-transparent shadow-sm md:shadow-none border md:border-none">
                             <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Sender</p>
                             <p className={`font-bold text-sm md:text-lg ${sender.color}`}>{sender.name}</p>
                             <p className="text-[10px] font-mono truncate text-slate-400 mt-1">{tx.sender}</p>
                           </div>
                           
-
                           <div className="hidden md:block text-slate-300 font-bold text-2xl">➔</div>
                           <div className="block md:hidden text-slate-300 font-bold text-lg text-center my-1">⬇️</div>
                           
-
                           <div className="flex-1 min-w-0 text-center md:text-left bg-white p-3 md:p-0 rounded-lg md:bg-transparent shadow-sm md:shadow-none border md:border-none">
                             <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Receiver</p>
                             <p className={`font-bold text-sm md:text-lg ${receiver.color}`}>{receiver.name}</p>
                             <p className="text-[10px] font-mono truncate text-slate-400 mt-1">{tx.receiver}</p>
                           </div>
-
+                          
                           <div className="bg-green-100 mt-2 md:mt-0 px-4 md:px-6 py-2 md:py-3 rounded-xl border border-green-200 text-center shrink-0 shadow-inner">
                             <p className="text-[10px] font-bold text-green-700 uppercase mb-1">Amount</p>
                             <p className="text-xl md:text-2xl font-extrabold text-green-800">{tx.amount}</p>

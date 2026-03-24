@@ -89,6 +89,7 @@ export default function Wallet() {
 
   const getIdentity = (pubKey: string) => {
     if (pubKey === "SYSTEM") return "SYSTEM (Airdrop)";
+    if (pubKey === "NETWORK_GENESIS") return "NETWORK GENESIS";
     if (authUser && pubKey === authUser.public_key) return "You";
     const user = wallets.find(w => w.public_key === pubKey);
     return user ? user.username : "Unknown Address";
