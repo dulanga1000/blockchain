@@ -17,10 +17,37 @@ export default function Navbar() {
     return () => window.removeEventListener("authChange", checkUser);
   }, []);
 
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        const storedUser = localStorage.getItem("authUser");
+        if (storedUser) {
+          localStorage.removeItem("authUser");
+          setAuthUser(null);
+          window.dispatchEvent(new Event("authChange"));
+          alert("Session expired due to 15 minutes of inactivity. Please log in again.");
+          navigate("/wallet");
+        }
+      }, 900000); 
+    };
+
+    const events = ["mousemove", "keydown", "mousedown", "touchstart"];
+    events.forEach(event => window.addEventListener(event, resetTimer));
+    resetTimer();
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach(event => window.removeEventListener(event, resetTimer));
+    };
+  }, [navigate]);
+
   const handleLogout = () => {
     localStorage.removeItem("authUser");
     window.dispatchEvent(new Event("authChange"));
-    setIsMobileMenuOpen(false); 
+    setIsMobileMenuOpen(false);
     navigate("/wallet");
   };
 
@@ -33,7 +60,6 @@ export default function Navbar() {
   return (
     <nav className="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white shadow-xl sticky top-0 z-50 border-b border-blue-800/50">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
-        
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded bg-gradient-to-br from-blue-400 to-cyan-300 flex items-center justify-center shadow-lg shadow-cyan-500/30">
             <span className="font-bold text-slate-900">B</span>
