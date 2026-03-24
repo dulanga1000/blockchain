@@ -8,12 +8,18 @@ export default function TransactionForm() {
   const [receiverUsername, setReceiverUsername] = useState("");
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
+  const [notification, setNotification] = useState<{text: string, type: 'success' | 'error'} | null>(null);
 
   useEffect(() => {
     getWallets().then(setWallets).catch(console.error);
     const stored = localStorage.getItem("authUser");
     if (stored) setAuthUser(JSON.parse(stored));
   }, []);
+
+  const showMsg = (text: string, type: 'success' | 'error') => {
+    setNotification({ text, type });
+    setTimeout(() => setNotification(null), 6000);
+  };
 
   if (!authUser) {
     return (
@@ -28,8 +34,8 @@ export default function TransactionForm() {
   const receiverWallet = wallets.find(w => w.username === receiverUsername);
 
   const submitTransaction = async () => {
-    if (!receiverWallet) return alert("Select a valid receiver.");
-    if (receiverWallet.username === authUser.username) return alert("You cannot send money to yourself.");
+    if (!receiverWallet) return showMsg("Select a valid receiver from the directory.", "error");
+    if (receiverWallet.username === authUser.username) return showMsg("You cannot send money to yourself.", "error");
 
     setLoading(true);
     try {
@@ -47,25 +53,32 @@ export default function TransactionForm() {
       const data = await response.json();
       
       if (response.ok) {
-        alert("✅ Transaction signed using your Private Key and added to Mempool!");
-        setAmount(""); setReceiverUsername("");
+        showMsg("Transaction cryptographically signed and added to Mempool!", "success");
+        setAmount(""); 
+        setReceiverUsername("");
         const updatedAuth = {...authUser, balance: authUser.balance - Number(amount)};
         localStorage.setItem("authUser", JSON.stringify(updatedAuth));
         setAuthUser(updatedAuth);
-      } else alert("❌ Error: " + data.error);
+      } else showMsg("Error: " + data.error, "error");
     } catch (error) { 
-      alert("Network error."); 
+      showMsg("Network error connecting to the node.", "error"); 
     }
     setLoading(false);
   };
 
-  const inputClass = "w-full bg-white border-2 border-slate-200 text-slate-900 text-sm rounded-lg focus:border-blue-500 block p-3 font-semibold transition-all";
+  const inputClass = "w-full bg-white border-2 border-slate-200 text-slate-900 text-sm rounded-lg focus:border-blue-500 block p-3 font-semibold transition-all outline-none";
 
   return (
     <div className="max-w-xl mx-auto mt-6 md:mt-10 bg-white shadow-2xl p-5 md:p-8 rounded-2xl md:rounded-3xl border border-slate-100 m-4">
       <div className="mb-6 border-b border-slate-100 pb-4">
         <h2 className="text-xl md:text-2xl font-extrabold text-slate-800">Transfer Funds</h2>
       </div>
+
+      {notification && (
+        <div className={`mb-6 p-4 rounded-xl border-l-4 shadow-sm font-bold text-sm md:text-base ${notification.type === 'success' ? 'bg-emerald-100 border-emerald-500 text-emerald-800' : 'bg-red-100 border-red-500 text-red-800'}`}>
+          {notification.type === 'success' ? '✅ ' : '❌ '} {notification.text}
+        </div>
+      )}
 
       <div className="bg-slate-900 p-4 rounded-xl mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center text-white gap-3">
         <div>
@@ -96,7 +109,7 @@ export default function TransactionForm() {
 
         <button onClick={submitTransaction} disabled={loading || !receiverWallet || !amount || Number(amount) <= 0}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 md:py-4 rounded-xl shadow-lg transition-all text-base md:text-lg disabled:opacity-50 mt-4">
-          {loading ? "Signing..." : "Sign & Broadcast"}
+          {loading ? "Signing Transaction..." : "Sign & Broadcast"}
         </button>
       </div>
     </div>

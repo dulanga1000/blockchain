@@ -6,7 +6,7 @@ export default function Blockchain() {
   const [chain, setChain] = useState<ChainBlock[]>([]);
   const [wallets, setWallets] = useState<WalletResponse[]>([]);
   const [loading, setLoading] = useState(false);
-  const [validationStatus, setValidationStatus] = useState<{message: string, valid: boolean} | null>(null);
+  const [notification, setNotification] = useState<{message: string, valid: boolean} | null>(null);
 
   const fetchInitialData = async () => {
     try {
@@ -21,6 +21,11 @@ export default function Blockchain() {
 
   useEffect(() => { fetchInitialData(); }, []);
 
+  const showMsg = (message: string, valid: boolean) => {
+    setNotification({ message, valid });
+    setTimeout(() => setNotification(null), 6000);
+  };
+
   const getIdentity = (pubKey: string) => {
     if (pubKey === "SYSTEM") return { name: "SYSTEM (Airdrop)", color: "text-amber-600" };
     if (pubKey === "NETWORK_GENESIS") return { name: "NETWORK GENESIS", color: "text-fuchsia-500" };
@@ -31,10 +36,9 @@ export default function Blockchain() {
   const handleValidate = async () => {
     try {
       const result = await validateChain();
-      setValidationStatus(result);
-      setTimeout(() => setValidationStatus(null), 5000); 
+      showMsg(result.message, result.valid);
     } catch (error) { 
-      alert("Error connecting to node."); 
+      showMsg("Error connecting to node to validate integrity.", false);
     }
   };
 
@@ -43,9 +47,9 @@ export default function Blockchain() {
     try {
       await mineBlock();
       await fetchInitialData(); 
-      alert("✅ Block successfully mined and added to the ledger!");
+      showMsg("Block successfully mined and added to the secure ledger!", true);
     } catch (error) { 
-      alert("❌ Error mining block."); 
+      showMsg("Error mining block. Check node connection.", false);
     }
     setLoading(false);
   };
@@ -67,9 +71,9 @@ export default function Blockchain() {
         </div>
       </div>
 
-      {validationStatus && (
-        <div className={`mb-6 p-4 rounded-xl border text-center font-bold text-sm md:text-lg shadow-sm ${validationStatus.valid ? 'bg-green-100 border-green-300 text-green-800' : 'bg-red-100 border-red-300 text-red-800'}`}>
-           {validationStatus.valid ? "✅ " : "❌ "} {validationStatus.message}
+      {notification && (
+        <div className={`mb-6 p-4 rounded-xl border-l-4 shadow-sm font-bold text-sm md:text-lg ${notification.valid ? 'bg-emerald-100 border-emerald-500 text-emerald-800' : 'bg-red-100 border-red-500 text-red-800'}`}>
+           {notification.valid ? "✅ " : "❌ "} {notification.message}
         </div>
       )}
       

@@ -12,6 +12,7 @@ export default function Wallet() {
   const [history, setHistory] = useState<TransactionHistory[]>([]);
   const [loading, setLoading] = useState(false);
   const [authUser, setAuthUser] = useState<WalletResponse | null>(null);
+  const [notification, setNotification] = useState<{text: string, type: 'success' | 'error'} | null>(null);
 
   useEffect(() => {
     loadWallets();
@@ -22,6 +23,11 @@ export default function Wallet() {
       loadHistory(user.public_key); 
     }
   }, []);
+
+  const showMsg = (text: string, type: 'success' | 'error') => {
+    setNotification({ text, type });
+    setTimeout(() => setNotification(null), 6000);
+  };
 
   const loadWallets = async () => {
     try {
@@ -53,11 +59,11 @@ export default function Wallet() {
     setAuthUser(null);
     setHistory([]); 
     window.dispatchEvent(new Event("authChange"));
-    alert("You have been securely logged out.");
+    showMsg("You have been securely logged out.", "success");
   };
 
   const handleRegister = async () => {
-    if (!username.trim() || !password.trim()) return alert("Enter username and password.");
+    if (!username.trim() || !password.trim()) return showMsg("Enter username and password.", "error");
     setLoading(true);
     try {
       const user = await createWallet(username, password);
@@ -65,15 +71,15 @@ export default function Wallet() {
       setUsername(""); 
       setPassword("");
       await loadWallets(); 
-      alert("Registration successful! 10,000 Coins Airdropped.");
+      showMsg("Registration successful! 10,000 Coins Airdropped.", "success");
     } catch (error: any) { 
-      alert("Error: " + error.message); 
+      showMsg("Error: " + error.message, "error"); 
     }
     setLoading(false);
   };
 
   const handleLogin = async () => {
-    if (!loginUsername.trim() || !loginPassword.trim()) return alert("Enter username and password.");
+    if (!loginUsername.trim() || !loginPassword.trim()) return showMsg("Enter username and password.", "error");
     setLoading(true);
     try {
       const user = await loginUser(loginUsername, loginPassword);
@@ -81,8 +87,9 @@ export default function Wallet() {
       setLoginUsername(""); 
       setLoginPassword("");
       await loadWallets(); 
+      showMsg(`Welcome back, ${user.username}!`, "success");
     } catch (error: any) { 
-      alert("Error: " + error.message); 
+      showMsg("Error: " + error.message, "error"); 
     }
     setLoading(false);
   };
@@ -97,15 +104,22 @@ export default function Wallet() {
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-6 mt-2 md:mt-6 animate-fade-in">
+      
+      {notification && (
+        <div className={`mb-6 p-4 rounded-xl border-l-4 shadow-sm font-bold text-sm md:text-base ${notification.type === 'success' ? 'bg-emerald-100 border-emerald-500 text-emerald-800' : 'bg-red-100 border-red-500 text-red-800'}`}>
+          {notification.type === 'success' ? '✅ ' : '❌ '} {notification.text}
+        </div>
+      )}
+
       {!authUser ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 md:mb-10">
           <div className="bg-white p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-xl border border-slate-200">
             <h2 className="text-xl md:text-2xl font-extrabold text-slate-800 mb-2">Create Node Identity</h2>
             <p className="text-slate-500 text-xs md:text-sm mb-6">Set a password to secure your new private key.</p>
             <input type="text" placeholder="Choose username..." value={username} onChange={(e) => setUsername(e.target.value)}
-              className="px-4 py-3 rounded-xl border-2 border-slate-300 w-full mb-3 text-slate-900 font-bold outline-none text-sm md:text-base" />
+              className="px-4 py-3 rounded-xl border-2 border-slate-300 w-full mb-3 text-slate-900 font-bold outline-none text-sm md:text-base focus:border-cyan-500" />
             <input type="password" placeholder="Create a password..." value={password} onChange={(e) => setPassword(e.target.value)}
-              className="px-4 py-3 rounded-xl border-2 border-slate-300 w-full mb-4 text-slate-900 font-bold outline-none text-sm md:text-base" />
+              className="px-4 py-3 rounded-xl border-2 border-slate-300 w-full mb-4 text-slate-900 font-bold outline-none text-sm md:text-base focus:border-cyan-500" />
             <button onClick={handleRegister} disabled={loading} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 md:py-4 rounded-xl shadow-lg transition text-sm md:text-base">
               {loading ? "Generating Keys..." : "Register & Get 10k Coins"}
             </button>
@@ -115,9 +129,9 @@ export default function Wallet() {
             <h2 className="text-xl md:text-2xl font-extrabold text-white mb-2">Login to Wallet</h2>
             <p className="text-slate-400 text-xs md:text-sm mb-6">Enter your password to unlock your private key locally.</p>
             <input type="text" placeholder="Enter username..." value={loginUsername} onChange={(e) => setLoginUsername(e.target.value)}
-              className="px-4 py-3 rounded-xl bg-slate-800 border-2 border-slate-700 text-white w-full mb-3 font-bold outline-none text-sm md:text-base" />
+              className="px-4 py-3 rounded-xl bg-slate-800 border-2 border-slate-700 text-white w-full mb-3 font-bold outline-none text-sm md:text-base focus:border-blue-500" />
             <input type="password" placeholder="Enter password..." value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)}
-              className="px-4 py-3 rounded-xl bg-slate-800 border-2 border-slate-700 text-white w-full mb-4 font-bold outline-none text-sm md:text-base" />
+              className="px-4 py-3 rounded-xl bg-slate-800 border-2 border-slate-700 text-white w-full mb-4 font-bold outline-none text-sm md:text-base focus:border-blue-500" />
             <button onClick={handleLogin} disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 md:py-4 rounded-xl shadow-lg transition text-sm md:text-base">
               {loading ? "Authenticating..." : "Unlock Wallet"}
             </button>
@@ -125,7 +139,7 @@ export default function Wallet() {
         </div>
       ) : (
         <>
-          <div className="bg-gradient-to-br from-slate-900 to-blue-900 p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-2xl mb-8 md:mb-10 border border-blue-800">
+          <div className="bg-linear-to-br from-slate-900 to-blue-900 p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-2xl mb-8 md:mb-10 border border-blue-800">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
               <h2 className="text-xl md:text-3xl font-extrabold text-white flex items-center gap-2">
                 <span>🛡️</span> My Dashboard
