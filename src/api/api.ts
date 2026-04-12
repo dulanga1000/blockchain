@@ -1,4 +1,4 @@
-export const API = "https://blockchain-backend-t85y.onrender.com";
+export const API = "https://blockchain-backend-hcb3.onrender.com";
 
 export interface WalletResponse {
   username: string;
